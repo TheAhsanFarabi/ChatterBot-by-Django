@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatterBot</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        .chat-box {
+            width: 100%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .chat-input-group {
+            margin-top: 10px;
+        }
+        .chat-log {
+            height: 60vh;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .message {
+            margin: 5px 0;
+        }
+        .message.user-message {
+            text-align: right;
+        }
+        .message.bot-message {
+            text-align: left;
+        }
+        .typing {
+            display: inline-block;
+            border-right: 2px solid;
+            animation: blink 0.75s step-end infinite;
+        }
+        @keyframes blink {
+            from, to {
+                border-color: transparent;
+            }
+            50% {
+                border-color: black;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-box bg-light">
+        <h3 class="text-center">ChatterBot</h3>
+        <div class="chat-log" id="chat-log">
+            {% for chat in chats reversed %}
+                <div class="message user-message alert alert-info m-3"><strong>You:</strong> {{ chat.user_message }}</div>
+                <div class="message bot-message alert alert-warning m-3"><strong>Bot:</strong> {{ chat.bot_response }}</div>
+            {% endfor %}
+        </div>
+        <div class="input-group chat-input-group">
+            <input type="text" class="form-control" id="chat-input" placeholder="Type your message here...">
+            <div class="input-group-append">
+                <button class="btn btn-primary" id="send-btn">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function typeWriter(element, text, delay = 50) {
+            let i = 0;
+            function typing() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(typing, delay);
+                } else {
+                    element.classList.remove('typing');
+                    scrollToBottom();
+                }
+            }
+            scrollToBottom()
+            typing();
+        }
+
+        function scrollToBottom() {
+            $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
+        }
+
+        $(document).ready(function() {
+            $('#send-btn').click(function() {
+                var user_input = $('#chat-input').val();
+                if (user_input.trim() !== "") {
+                    $('#chat-log').append('<div class="message user-message alert alert-info m-3"><strong>You:</strong> ' + user_input + '</div>');
+                    //scrollToBottom();
+                    $.ajax({
+                        url: '',
+                        type: 'POST',
+                        data: {
+                            user_input: user_input,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function(data) {
+                            let botMessageElement = $('<div class="message bot-message alert alert-warning m-3"><strong>Bot:</strong> <span class="typing"></span></div>');
+                            $('#chat-log').append(botMessageElement);
+                            let typingElement = botMessageElement.find('.typing')[0];
+                            typeWriter(typingElement, data.response);
+                            $('#chat-input').val('');
+                        }
+                    });
+                }
+            });
+
+            $('#chat-input').keypress(function(e) {
+                if (e.which == 13) {
+                    $('#send-btn').click();
+                }
+            });
+
+            // Initial scroll to bottom
+            scrollToBottom();
+        });
+    </script>
+</body>
+</html>
