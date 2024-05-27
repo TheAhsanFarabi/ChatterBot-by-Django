@@ -22,13 +22,13 @@ ChatterBot is a simple Django-based chat application where users can interact wi
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/chatterbot.git
+   git clone https://github.com/TheAhsanFarabi/ChatterBot-by-Django.git
    ```
 
 2. **Navigate into the project directory:**
 
    ```bash
-   cd chatterbot
+   cd ChatterBot-by-Django
    ```
 
 3. **Install the required Python packages:**
